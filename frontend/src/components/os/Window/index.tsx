@@ -65,25 +65,25 @@ export default function Window({
           bg-[#000080] text-white
           ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
         `}>
-          <span className="text-sm font-bold">{title}</span>
+          <span className="text-sm truncate">{title}</span>
           <div className="flex gap-1">
-            <button 
-              className="px-1 min-w-[14px] h-[14px] 
-                         bg-[#c0c0c0] text-black text-sm font-bold
-                         border border-[#ffffff_#808080_#808080_#ffffff]
-                         active:border-[#808080_#ffffff_#ffffff_#808080]
-                         flex items-center justify-center"
-              onClick={onMinimize}
-            >
-              _
-            </button>
-            <button 
-              className="px-1 min-w-[14px] h-[14px] 
-                         bg-[#c0c0c0] text-black text-sm font-bold
-                         border border-[#ffffff_#808080_#808080_#ffffff]
-                         active:border-[#808080_#ffffff_#ffffff_#808080]
-                         flex items-center justify-center"
-              onClick={onClose}
+            {onMinimize && (
+              <button
+                className="w-[16px] h-[14px] bg-[#c0c0c0] border-[1px] border-[#ffffff_#808080_#808080_#ffffff] flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMinimize();
+                }}
+              >
+                _
+              </button>
+            )}
+            <button
+              className="w-[16px] h-[14px] bg-[#c0c0c0] border-[1px] border-[#ffffff_#808080_#808080_#ffffff] flex items-center justify-center"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
             >
               ×
             </button>
@@ -91,7 +91,7 @@ export default function Window({
         </div>
 
         {/* Window Content */}
-        <div className="p-2 h-[calc(100%-28px)]">
+        <div className="p-1 h-[calc(100%-20px)]">
           {children}
         </div>
       </div>

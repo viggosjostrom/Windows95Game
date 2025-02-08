@@ -21,6 +21,8 @@ const getIconPath = (appType: string): string => {
       return '/icons/mycomputer.png';
     case 'notepad':
       return '/icons/notepad.png';
+    case 'catch95':
+      return '/icons/catch95_desktop_logo.png';
     default:
       return '/icons/default.png';
   }
@@ -71,8 +73,8 @@ export default function Taskbar({ openWindows, onWindowSelect }: TaskbarProps) {
       </div>
 
       {/* Clock */}
-      <div className="px-2 h-[22px] flex items-center text-black
-                      border-[1px] border-[#808080_#ffffff_#ffffff_#808080]">
+      <div className="px-2 h-[22px] flex items-center
+                border-[1px] border-[#808080_#ffffff_#ffffff_#808080]">
         <span className="text-sm text-black">4:20 PM</span>
       </div>
     </div>
