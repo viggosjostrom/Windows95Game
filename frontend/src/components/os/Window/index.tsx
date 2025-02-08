@@ -25,18 +25,19 @@ export default function Window({
   defaultSize = { width: 200, height: 150 },
   isActive = false,
   isMinimized = false,
-  onFocus
+  onFocus,
+  hasVirus
 }: WindowProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const nodeRef = useRef<HTMLDivElement>(null);
+  const nodeRef = useRef(null);
 
   if (isMinimized) return null;
 
   return (
     <Draggable
       nodeRef={nodeRef}
-      defaultPosition={defaultPosition}
       handle=".window-title-bar"
+      defaultPosition={defaultPosition}
       onStart={() => setIsDragging(true)}
       onStop={() => setIsDragging(false)}
       scale={1}
@@ -49,6 +50,7 @@ export default function Window({
           shadow-[inset_-1px_-1px_#0a0a0a,inset_1px_1px_#fff]
           ${isActive ? 'z-10' : 'z-0'}
           ${isDragging ? 'cursor-grabbing' : ''}
+          ${hasVirus ? 'animate-pulse' : ''}
         `}
         style={{
           width: defaultSize.width,
