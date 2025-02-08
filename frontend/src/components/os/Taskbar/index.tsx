@@ -21,6 +21,8 @@ const getIconPath = (appType: string): string => {
       return '/icons/mycomputer.png';
     case 'notepad':
       return '/icons/notepad.png';
+    case 'catch95':
+      return '/icons/catch95_desktop_logo.png';
     default:
       return '/icons/default.png';
   }
