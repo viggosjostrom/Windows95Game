@@ -1,0 +1,42 @@
+# Node.js dependencies
+/frontend/node_modules
+/frontend/.next
+/frontend/out
+/frontend/dist
+/frontend/.turbo
+/frontend/yarn.lock
+/frontend/package-lock.json
+/frontend/pnpm-lock.yaml
+
+# C# build artifacts
+/backend/bin
+/backend/obj
+/backend/**/*.dll
+/backend/**/*.exe
+/backend/**/*.pdb
+/backend/**/*.cache
+/backend/**/*.csproj.user
+/backend/**/*.nuget.props
+/backend/**/*.nuget.targets
+
+# Environment and config files
+/.env
+/.env.local
+/.env.*.local
+/frontend/.env
+/frontend/.env.local
+/backend/appsettings*.json
+/backend/secrets.json
+
+# Logs
+/frontend/logs
+/frontend/npm-debug.log
+/frontend/yarn-error.log
+/backend/logs
+/backend/**/*.log
+
+# IDE and editor settings
+/.vscode
+/.idea
+/.DS_Store
+/.cursorignore
