@@ -8,51 +8,35 @@ import appRegistry from '@/components/apps/registry';
 import { defaultIcons } from '@/config/desktopIcons';
 import Taskbar from '@/components/os/Taskbar';
 import { useGameStore } from '@/store';
-
-interface OpenWindow {
-  id: string;
-  appType: string;
-  title: string;
-  isActive: boolean;
-  isMinimized: boolean;
-}
+import { useGlitchyBehavior } from '@/hooks/useGlitchyBehavior';
+import Glitchy from '@/components/game/Glitchy';
+import { useWindowManager } from '@/hooks/useWindowManager';
 
 export default function Desktop() {
   const { 
     isGameStarted,
     virusPosition,
+    virusState,
     updateVirusPosition,
     updateVirusState 
   } = useGameStore();
 
+  const {
+    openWindows,
+    activeWindow,
+    openWindow,
+    setOpenWindows,
+    setActiveWindow
+  } = useWindowManager();
+
   const [icons] = useState<DesktopIcon[]>(defaultIcons);
   const [selectedIcon] = useState<string | null>(null);
-  const [openWindows, setOpenWindows] = useState<OpenWindow[]>([]);
-  const [activeWindow, setActiveWindow] = useState<string | null>(null);
   const [appStates, setAppStates] = useState<Record<string, AppState>>({});
 
   const handleIconDoubleClick = (appType: string) => {
     const icon = icons.find(i => i.appType === appType);
     if (!icon) return;
-
-    const newWindow: OpenWindow = {
-      id: `${appType}-${Date.now()}`,
-      appType,
-      title: icon.title,
-      isActive: true,
-      isMinimized: false
-    };
-
-    setOpenWindows(prev => {
-      const updatedWindows = [...prev.map(w => ({ ...w, isActive: false })), newWindow];
-      
-      if (virusPosition.currentWindow === appType) {
-        updateVirusPosition(newWindow.id);
-      }
-      
-      return updatedWindows;
-    });
-    setActiveWindow(newWindow.id);
+    openWindow(appType, icon.title);
   };
 
   const handleWindowClose = (windowId: string) => {
@@ -77,33 +61,28 @@ export default function Desktop() {
     }
   };
 
-  const handleWindowFocus = (windowId: string) => {
-    setOpenWindows(prev => 
-      prev.map(w => ({
-        ...w,
-        isActive: w.id === windowId
-      }))
-    );
-    setActiveWindow(windowId);
-  };
+  const handleWindowSelect = (windowId: string) => {
+    const window = openWindows.find(w => w.id === windowId);
+    if (!window) return;
 
-  const handleWindowMinimize = (windowId: string) => {
-    setOpenWindows(prev => 
-      prev.map(w => ({
-        ...w,
-        isMinimized: w.id === windowId ? true : w.isMinimized
-      }))
-    );
-  };
-
-  const handleWindowRestore = (windowId: string) => {
-    setOpenWindows(prev => 
-      prev.map(w => ({
-        ...w,
-        isMinimized: w.id === windowId ? false : w.isMinimized,
-        isActive: w.id === windowId
-      }))
-    );
+    if (window.isMinimized) {
+      // Restore minimized window
+      setOpenWindows(prev => 
+        prev.map(w => ({
+          ...w,
+          isMinimized: w.id === windowId ? false : w.isMinimized,
+          isActive: w.id === windowId
+        }))
+      );
+    } else {
+      // Set window as active
+      setOpenWindows(prev => 
+        prev.map(w => ({
+          ...w,
+          isActive: w.id === windowId
+        }))
+      );
+    }
     setActiveWindow(windowId);
   };
 
@@ -114,8 +93,30 @@ export default function Desktop() {
     }));
   };
 
+  const handleWindowPositionChange = (windowId: string, newPosition: { x: number; y: number }) => {
+    setOpenWindows(prev => 
+      prev.map(w => w.id === windowId 
+        ? { ...w, position: newPosition }
+        : w
+      )
+    );
+    
+    // Update virus position if it's in this window
+    if (virusPosition.currentWindow === windowId) {
+      const window = openWindows.find(w => w.id === windowId);
+      if (window) {
+        updateVirusPosition(windowId, {
+          x: newPosition.x + Math.random() * (window.size.width - 50),
+          y: newPosition.y + Math.random() * (window.size.height - 50)
+        });
+      }
+    }
+  };
+
+  useGlitchyBehavior({ openWindows });
+
   return (
-    <div className="h-screen w-screen bg-[#008080] overflow-hidden relative">
+    <div className="relative w-screen h-screen bg-[#008080] overflow-hidden">
       {!isGameStarted && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-[#c0c0c0] p-4 border-2 border-[#ffffff] shadow-md">
@@ -144,23 +145,21 @@ export default function Desktop() {
       <div className="absolute inset-0 pointer-events-none">
         {openWindows.map((window, index) => {
           const AppComponent = appRegistry[window.appType]?.component;
-          const defaultSize = appRegistry[window.appType]?.defaultSize;
 
           return (
             <div key={window.id} className="pointer-events-auto">
               <Window
+                id={window.id}
                 title={window.title}
                 onClose={() => handleWindowClose(window.id)}
-                onMinimize={() => handleWindowMinimize(window.id)}
+                onMinimize={() => handleWindowSelect(window.id)}
                 isActive={window.isActive}
                 isMinimized={window.isMinimized}
-                onFocus={() => handleWindowFocus(window.id)}
-                defaultPosition={{ 
-                  x: Math.max(50, (globalThis.window.innerWidth / 2) - ((defaultSize?.width || 400) / 2) + (index * 30)),
-                  y: Math.max(50, (globalThis.window.innerHeight / 2) - ((defaultSize?.height || 300) / 2) + (index * 30))
-                }}
-                defaultSize={defaultSize}
+                onFocus={() => setActiveWindow(window.id)}
+                defaultPosition={window.position}
+                defaultSize={window.size}
                 hasVirus={virusPosition.currentWindow === window.id}
+                onPositionChange={(pos) => handleWindowPositionChange(window.id, pos)}
               >
                 {AppComponent && (
                   <AppComponent 
@@ -177,14 +176,13 @@ export default function Desktop() {
 
       <Taskbar 
         openWindows={openWindows}
-        onWindowSelect={(id) => {
-          const window = openWindows.find(w => w.id === id);
-          if (window?.isMinimized) {
-            handleWindowRestore(id);
-          } else {
-            handleWindowFocus(id);
-          }
-        }}
+        onWindowSelect={handleWindowSelect}
+      />
+
+      <Glitchy 
+        isMoving={virusState === 'moving'}
+        position={virusPosition.coordinates}
+        virusPosition={virusPosition}
       />
     </div>
   );

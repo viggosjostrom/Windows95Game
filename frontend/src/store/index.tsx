@@ -65,7 +65,7 @@ export const useGameStore = create<GameState>((set) => ({
   updateVirusPosition: (windowId, coordinates) => set((state) => ({
     virusPosition: {
       currentWindow: windowId,
-      coordinates: coordinates || null,
+      coordinates: coordinates || state.virusPosition.coordinates,
     },
     lastKnownLocation: windowId || state.lastKnownLocation,
   })),

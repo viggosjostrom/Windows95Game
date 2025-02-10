@@ -4,6 +4,7 @@ import { useState, ReactNode, useRef } from 'react';
 import Draggable from 'react-draggable';
 
 interface WindowProps {
+  id: string;
   title: string;
   children: ReactNode;
   onClose: () => void;
@@ -14,9 +15,21 @@ interface WindowProps {
   isMinimized?: boolean;
   onFocus?: () => void;
   hasVirus?: boolean;
+  onPositionChange?: (position: { x: number; y: number }) => void;
 }
 
+// Create a wrapper component that uses forwardRef
+const DraggableWindow = ({ children, ...props }: any) => {
+  const nodeRef = useRef(null);
+  return (
+    <Draggable nodeRef={nodeRef} {...props}>
+      <div ref={nodeRef}>{children}</div>
+    </Draggable>
+  );
+};
+
 export default function Window({ 
+  id,
   title, 
   children, 
   onClose,
@@ -26,24 +39,31 @@ export default function Window({
   isActive = false,
   isMinimized = false,
   onFocus,
-  hasVirus
+  hasVirus,
+  onPositionChange
 }: WindowProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const nodeRef = useRef(null);
+  const [position, setPosition] = useState(defaultPosition);
 
   if (isMinimized) return null;
 
+  const handleDragStop = (e: any, data: any) => {
+    const newPosition = { x: data.x, y: data.y };
+    setPosition(newPosition);
+    setIsDragging(false);
+    onPositionChange?.(newPosition);
+  };
+
   return (
-    <Draggable
-      nodeRef={nodeRef}
+    <DraggableWindow
       handle=".window-title-bar"
       defaultPosition={defaultPosition}
+      position={position}
       onStart={() => setIsDragging(true)}
-      onStop={() => setIsDragging(false)}
+      onStop={handleDragStop}
       scale={1}
     >
       <div 
-        ref={nodeRef}
         className={`
           absolute bg-[#c0c0c0] 
           border-[2px] border-[#dfdfdf_#808080_#808080_#dfdfdf]
@@ -95,6 +115,6 @@ export default function Window({
           {children}
         </div>
       </div>
-    </Draggable>
+    </DraggableWindow>
   );
 }
